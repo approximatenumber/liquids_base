@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
 import re
+import pickledb
 
-
-def soup_soup(url):
+def soup_page(url):
     browser.get(url)
     soup = BeautifulSoup(browser.page_source, "html.parser")
     return soup
@@ -28,7 +28,7 @@ def get_producers(soup):
 def get_items_of_producer(u):
     soup_num = 1
     items = []
-    soup = soup_soup(u + "?PAGEN_1=" + str(soup_num))
+    soup = soup_page(u + "?PAGEN_1=" + str(soup_num))
     order_links = soup.findAll('a', {'class': 'item_title'})
     prices = soup.findAll('span', {'class': 'min-offer-price'})
     descriptions = soup.findAll('div', {'itemprop': 'description'})
@@ -46,7 +46,7 @@ def get_items_of_producer(u):
     sleep(5)
     while True:
         try:
-            soup = soup_soup(u + "?PAGEN_1=" + str(soup_num))
+            soup = soup_page(u + "?PAGEN_1=" + str(soup_num))
             order_links = soup.findAll('a', {'class': 'item_title'})
             prices = soup.findAll('span', {'class': 'min-offer-price'})
             descriptions = soup.findAll('div', {'itemprop': 'description'})
@@ -74,14 +74,22 @@ START_PAGE = 'https://www.vardex.ru/e-juice.html'
 browser = webdriver.Firefox()
 
 catalog = []
-producers_soup = soup_soup(START_PAGE)
+producers_soup = soup_page(START_PAGE)
 producers = get_producers(producers_soup)
 for producer in producers:
-    item_soup = soup_soup(producer['producer'])
-    print('getting ', producer['producer'])
+    print('parsing %s...' % producer['producer'])
+    item_soup = soup_page(producer['link'])
     item = {"producer": producer["producer"],
             "items": get_items_of_producer(producer['link'])}
-    print(item)
     catalog.append(item)
     sleep(5)
+
 print(catalog)
+
+base = pickledb.load('/tmp/vaper_liquids.db', False)
+for producer_series in catalog:
+    base.dcreate(producer_series['producer'])
+    for item in producer_series['items']:
+        for feature in item.items():
+            base.dadd(producer_series['producer'], feature)
+base.dump()
