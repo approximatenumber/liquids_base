@@ -11,10 +11,14 @@ class LiquidBase():
         return self.base.db[producer]
 
     def add_item_series(self, item_series):
-        producer = item_series['producer']
+        #producer = item_series['producer']
         items = item_series['items']
-        self.base.dcreate(producer)
-        self.base.dadd(producer, tuple(items))
+        for item in items:
+            self.base.dcreate(item['title'])
+            for feature in item.items():
+                self.base.dadd(item['title'], feature)
+                self.base.dadd(item['title'], ('producer', item_series['producer']))
+        self.base.dump()
 
     def search(self, word):
         producers = self.base.db.keys()
