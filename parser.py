@@ -19,7 +19,7 @@ def soup_page(url):
 
 
 def get_producers(soup):
-    producers_links = soup.findAll('div', {'id':'sidebar-section'})[0].findAll('a')
+    producers_links = soup.findAll('div', {'id': 'sidebar-section'})[0].findAll('a')
     producers = []
     for producer_link in producers_links:
         producer = {"producer": producer_link.get('title'),
@@ -29,42 +29,26 @@ def get_producers(soup):
 
 
 def get_items_of_producer(u):
-    soup_num = 1
+    page_num = 1
     items = []
-    soup = soup_page(u + "?PAGEN_1=" + str(soup_num))
-    order_links = soup.findAll('a', {'class': 'item_title'})
-    prices = soup.findAll('span', {'class': 'min-offer-price'})
-    descriptions = soup.findAll('div', {'itemprop': 'description'})
-    ratings = soup.findAll('span', {'class': 'ratingValue'})
-
-    for order_link, price, description, rating in zip(order_links, prices, descriptions, ratings):
-        item = {"title": order_link.get('title'),
-                "link": 'https:' + order_link.get('href'),
-                "price": ''.join(re.findall('[0-9]+', price.getText())),
-                "description": description.getText(),
-                "rating": rating.getText()
-               }
-        items.append(item)
-    soup_num += 1
-    sleep(5)
     while True:
-        soup = soup_page(u + "?PAGEN_1=" + str(soup_num))
+        soup = soup_page(u + "?PAGEN_1=" + str(page_num))
         order_links = soup.findAll('a', {'class': 'item_title'})
         prices = soup.findAll('span', {'class': 'min-offer-price'})
         descriptions = soup.findAll('div', {'itemprop': 'description'})
         ratings = soup.findAll('span', {'class': 'ratingValue'})
-
         for order_link, price, description, rating in zip(order_links, prices, descriptions, ratings):
             item = {"title": order_link.get('title'),
                     "link": 'https:' + order_link.get('href'),
                     "price": ''.join(re.findall('[0-9]+', price.getText())),
                     "description": description.getText(),
                     "rating": rating.getText()
-                   }
+                    }
         if item in items:
             break
         else:
             items.append(item)
+            page_num += 1
             sleep(5)
     return items
 
@@ -108,8 +92,6 @@ def create_report(db_file):
     base = pickledb.load(db_file, False)
     # create_html(base, 'liquids.html')
     create_csv(base, 'liquids.csv')
-
-
 
 
 START_PAGE = 'https://www.vardex.ru/e-juice.html'
