@@ -110,10 +110,8 @@ for producer in producers:
     sleep(5)
 browser.close()
 
-
 base = LiquidBase(json_db)
 for producer_series in catalog:
-    base.add_item_series(producer_series)
-
+    base.add_item(producer_series)
 
 create_report(json_db)
